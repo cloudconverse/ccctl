@@ -19,6 +19,7 @@
 
 # Go workspace file
 *.pyc
+ccctl-venv
 
 # env file
 .env
