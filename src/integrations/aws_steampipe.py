@@ -9,9 +9,11 @@ SQLITE_AWS_EXTENSION_ENDPOINT = "https://github.com/turbot/steampipe-plugin-aws/
 SQLITE_PLUGIN_VERSION = "v0.147.0"
 
 class AWSSteampipe:
-    def __init__(self):
+    def __init__(self, aws_sso_profile, aws_regions=[]):
         self.db_connection = None
         self.home = Path.home()
+        self.aws_sso_profile = aws_sso_profile
+        self.aws_regions = aws_regions
 
     def setup_sqlite(self):
         self.db_connection = sqlite3.connect(f"{self.home}/.ccctl/aws_steampipe.db")
@@ -30,3 +32,4 @@ class AWSSteampipe:
         self.cursor.execute(f".load {self.home}/.ccctl/steampipe_sqlite_aws.so")
 
     def setup_tables(self):
+        self.cursor.execute("select steampipe_configure_aws('{\"profile\": \"{}\", \"regions\": {}}');".format(self.aws_sso_profile, self.aws_regions))

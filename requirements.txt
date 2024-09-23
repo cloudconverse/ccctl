@@ -1,3 +1,2 @@
 typer
-sqlite3
 requests
