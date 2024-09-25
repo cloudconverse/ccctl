@@ -1,5 +1,6 @@
 import typer
-from typing_extensions import Annotated, Optional
+from typing_extensions import Annotated
+from typing import List, Optional
 from integrations.aws_steampipe import AWSSteampipe
 from config import CcctlConfig
 
@@ -23,16 +24,20 @@ def init_aws(integration: str,
 
 @app.command()
 def init(integration: str, 
-         llm_endpoint: Annotated[Optional[str], typer.Argument()] = None,
-         model: Annotated[Optional[str], typer.Argument()] = None,
-         aws_sso_profile: Annotated[Optional[str], typer.Argument()] = None,
-         aws_regions: Annotated[Optional[list[str]], typer.Argument()] = None):
+         llm_endpoint: str = None,
+         model: str = None,
+         aws_sso_profile: str = None,
+         aws_regions: Annotated[Optional[List[str]], typer.Option()] = None):
     """
     $ ccctl init aws # setup AWS steampipe integration
     """
 
     if integration == "aws":
-        init_aws(integration, llm_endpoint, model, aws_sso_profile, aws_regions)
+        init_aws(integration=integration, 
+                 llm_endpoint=llm_endpoint, 
+                 model=model, 
+                 aws_sso_profile=aws_sso_profile, 
+                 aws_regions=aws_regions)
     
 
 @app.command()

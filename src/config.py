@@ -8,7 +8,7 @@ class CcctlConfig:
 		self.llm_endpoint = llm_endpoint or ""
 		self.model = model or ""
 		self.aws_sso_profile = kwargs.get("aws_sso_profile", "")
-		self.aws_regions = kwargs.get("aws_regions", "")
+		self.aws_regions = kwargs.get("aws_regions", [])
 		self.config = configparser.ConfigParser()
 		self.config[self.integration] = {}
 
@@ -18,8 +18,11 @@ class CcctlConfig:
 			os.mkdir(f"{home}/.ccctl")
 		self.config[self.integration]["llm_endpoint"] = self.llm_endpoint
 		self.config[self.integration]["model"] = self.model
-		self.config[self.integration]["aws_sso_profile"] = self.aws_sso_profile
-		self.config[self.integration]["aws_regions"] = self.aws_regions
-		with open(f"{home}/ccctl/config", 'w') as configfile:
+
+		if self.aws_sso_profile:
+			self.config[self.integration]["aws_sso_profile"] = self.aws_sso_profile
+			self.config[self.integration]["aws_regions"] = self.aws_regions
+
+		with open(f"{home}/.ccctl/config", 'w+') as configfile:
   			self.config.write(configfile)
 
