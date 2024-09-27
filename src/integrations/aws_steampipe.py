@@ -37,9 +37,11 @@ class AWSSteampipe:
             extension_tar = tarfile.open(f"{self.home}/.ccctl/steampipe_sqlite_aws_{SQLITE_PLUGIN_VERSION}.tar.gz", "r:gz")
             extension_tar.extractall(f"{self.home}/.ccctl/")
             extension_tar.close()
+            if platform.system().lower() == "darwin":
+                os.rename(f"{self.home}/.ccctl/steampipe_sqlite_aws.so", f"{self.home}/.ccctl/steampipe_sqlite_aws.dylib")
 
     def load_sqlite_extension(self):
-        self.cursor.execute(f"select load_extension('{self.home}/.ccctl/steampipe_sqlite_aws.so')")
+        self.cursor.execute(f"select load_extension('{self.home}/.ccctl/steampipe_sqlite_aws')")
 
     def setup_tables(self):
         if not self.aws_sso_profile:
