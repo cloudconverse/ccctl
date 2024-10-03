@@ -18,8 +18,8 @@
 # vendor/
 
 # Go workspace file
-go.work
-go.work.sum
+*.pyc
+ccctl-venv
 
 # env file
 .env
