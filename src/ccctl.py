@@ -4,6 +4,7 @@ from typing import List, Optional
 from integrations.aws_steampipe import AWSSteampipe
 from config import CcctlConfig
 
+
 app = typer.Typer(no_args_is_help=True)
 
 def init_aws(integration: str, 
@@ -41,8 +42,18 @@ def init(integration: str,
     
 
 @app.command()
-def query():
-    pass
+def query(integration: str,
+          string_query: str,
+          llm_endpoint: str = None,
+          model: str = None):
+    """
+    $ ccctl query aws "How many instances are in running state?"
+    """
+    if "integration" == "aws":
+        ccctl_config = CcctlConfig(integration, llm_endpoint, model)
+        ccctl_config.load_aws()
+        aws_steampipe = AWSSteampipe(ccctl_config.aws_sso_profile, ccctl_config.aws_regions)
+        aws_steampipe.generate_query(ccctl_config.llm_endpoint, ccctl_config.model, string_query)        
 
 
 if __name__ == "__main__":
