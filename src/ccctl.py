@@ -53,7 +53,8 @@ def query(integration: str,
         ccctl_config = CcctlConfig(integration, llm_endpoint, model)
         ccctl_config.load_aws()
         aws_steampipe = AWSSteampipe(ccctl_config.aws_sso_profile, ccctl_config.aws_regions)
-        aws_steampipe.generate_query(ccctl_config.llm_endpoint, ccctl_config.model, string_query)        
+        sql = aws_steampipe.generate_query(ccctl_config.llm_endpoint, ccctl_config.model, string_query)
+        print(sql)        
 
 
 if __name__ == "__main__":

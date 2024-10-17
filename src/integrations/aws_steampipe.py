@@ -57,4 +57,5 @@ class AWSSteampipe:
 
     def generate_query(self, llm_endpoint, model, query):
         self.genai_engine = SQLGenAIEngine(llm_endpoint, model)
+        self.genai_engine.build_query_engine()
         return self.genai_engine.query(query)

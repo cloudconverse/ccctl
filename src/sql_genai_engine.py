@@ -39,6 +39,9 @@ class SQLGenAIEngine:
         return obj_index
 
     def build_query_engine(self):
+        if not self.llm_endpoint or not self.model:
+            err_console.print("Please set --llm-endpoint and/or --model")
+            sys.exit(1)
         table_indexes = self.index_tables()
         self.llm = Ollama(base_url=self.endpoint, model=self.model, request_timeout=120.0)
         self.query_engine = SQLTableRetrieverQueryEngine(
