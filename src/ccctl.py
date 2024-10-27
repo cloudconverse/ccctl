@@ -49,12 +49,17 @@ def query(integration: str,
     """
     $ ccctl query aws "How many instances are in running state?"
     """
-    if "integration" == "aws":
+
+    if integration == "aws":
         ccctl_config = CcctlConfig(integration, llm_endpoint, model)
         ccctl_config.load_aws()
         aws_steampipe = AWSSteampipe(ccctl_config.aws_sso_profile, ccctl_config.aws_regions)
+        #aws_steampipe.setup_sqlite()
+        #aws_steampipe.load_sqlite_extension()
+        #aws_steampipe.setup_tables()
         sql = aws_steampipe.generate_query(ccctl_config.llm_endpoint, ccctl_config.model, string_query)
-        print(sql)        
+        #import ipdb;ipdb.set_trace()
+        print(sql.response)        
 
 
 if __name__ == "__main__":

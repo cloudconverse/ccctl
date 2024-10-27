@@ -20,7 +20,7 @@ class CcctlConfig:
                 self.llm_endpoint = yaml_config[self.integration].get("llm_endpoint")
 
             if not self.model:
-                self.model = yaml_config[self.integration].get("llm_endpoint")
+                self.model = yaml_config[self.integration].get("model")
 
             if not self.aws_sso_profile:
                 self.aws_sso_profile = yaml_config[self.integration].get("aws_sso_profile")

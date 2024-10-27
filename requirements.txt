@@ -1,3 +1,6 @@
 typer
 requests
 python-config-parser
+llama-index-llms-ollama 
+llama-index
+llama-index-embeddings-huggingface

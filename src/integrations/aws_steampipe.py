@@ -8,7 +8,7 @@ import os
 import sys
 from rich.console import Console
 import json
-from ..sql_genai_engine import SQLGenAIEngine
+from .genai_engines.sql_genai_engine import SQLGenAIEngine
 
 SQLITE_AWS_EXTENSION_ENDPOINT = "https://github.com/turbot/steampipe-plugin-aws/releases/download/{}/steampipe_sqlite_aws.{}_{}.tar.gz"
 SQLITE_PLUGIN_VERSION = "v0.147.0"
@@ -20,9 +20,10 @@ class AWSSteampipe:
         self.home = Path.home()
         self.aws_sso_profile = aws_sso_profile
         self.aws_regions = aws_regions
+        self.db_connection_string = f"{self.home}/.ccctl/aws_steampipe.db"
 
     def setup_sqlite(self):
-        self.db_connection = sqlite3.connect(f"{self.home}/.ccctl/aws_steampipe.db")
+        self.db_connection = sqlite3.connect(self.db_connection_string)
         self.db_connection.enable_load_extension(True)
         self.cursor = self.db_connection.cursor()
 
@@ -56,6 +57,7 @@ class AWSSteampipe:
         pass
 
     def generate_query(self, llm_endpoint, model, query):
-        self.genai_engine = SQLGenAIEngine(llm_endpoint, model)
+        self.genai_engine = SQLGenAIEngine(llm_endpoint, model, self.db_connection_string)
         self.genai_engine.build_query_engine()
+        self.genai_engine.authenticate_aws_steampipe(self.aws_sso_profile, self.aws_regions)
         return self.genai_engine.query(query)
