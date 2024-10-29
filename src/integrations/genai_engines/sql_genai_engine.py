@@ -1,4 +1,4 @@
-from llama_index.core import VectorStoreIndex, Settings, SQLDatabase
+from llama_index.core import VectorStoreIndex, Settings, StorageContext, load_index_from_storage
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.core.objects import (
     SQLTableNodeMapping,
@@ -9,11 +9,13 @@ from llama_index.core.indices.struct_store.sql_query import (
     SQLTableRetrieverQueryEngine,
 )
 from llama_index.llms.ollama import Ollama
+from .ccsqldatabase import CCSQLDatabase
 from rich.console import Console
 import sys
 from pathlib import Path
 from sqlalchemy import event, Engine
 import json
+import os
 
 err_console = Console(stderr=True)
 
@@ -31,20 +33,35 @@ class SQLGenAIEngine:
         """
         We remove some ec2 tables that can confuse LLMs on asking for ec2s
         """
-        raw_query = self.db.run_sql("SELECT name FROM pragma_module_list()")
-        #import ipdb;ipdb.set_trace()
-        table_names = [t[0] for t in raw_query[1]["result"] if t[0].startswith("aws") and t[0] not in exclude]
-        table_schema_objs = [(SQLTableSchema(table_name=t)) for t in table_names]
-        table_node_mapping = SQLTableNodeMapping(self.db)
         Settings.embed_model = HuggingFaceEmbedding(
             model_name="BAAI/bge-small-en-v1.5"
         )
-        #import ipdb;ipdb.set_trace()
-        obj_index = ObjectIndex.from_objects(
-            table_schema_objs,
-            table_node_mapping,
-            VectorStoreIndex
-        )
+        index_directory = f"{self.home}/.ccctl/indexes"
+        Path(index_directory).mkdir(parents=True, exist_ok=True)
+        if os.path.isfile(f"{index_directory}/docstore.json"):
+            # load index from disk
+            storage_context = StorageContext.from_defaults(persist_dir=index_directory)
+            obj_index = load_index_from_storage(storage_context)
+        else:
+            # rebuild in the index
+            raw_query = self.db.run_sql("SELECT name FROM pragma_module_list()")
+            table_names = [t[0] for t in raw_query[1]["result"] if t[0].startswith("aws") and t[0] not in exclude]
+            table_schema_objs = [(SQLTableSchema(table_name=t)) for t in table_names]
+            table_node_mapping = SQLTableNodeMapping(self.db)
+            
+            obj_index = ObjectIndex.from_objects(
+                table_schema_objs,
+                table_node_mapping,
+                VectorStoreIndex
+            )
+
+            with open(f"{index_directory}/docstore.json", 'a') as doc_store:
+                json.dump({}, doc_store)
+
+            with open(f"{index_directory}/index_store.json", 'a') as index_store:
+                json.dump({}, index_store)
+                
+            obj_index.persist(index_directory)
 
         return obj_index
 
@@ -74,36 +91,3 @@ class SQLGenAIEngine:
 
     def query(self, query):
         return self.query_engine.query(query)
-
-class CCSQLDatabase(SQLDatabase):
-    def get_single_table_info(self, table_name):
-        """Get table info for a single table."""
-        # a money patch to remove foriegn keys checks as our virtual tables dont have foriegn keys
-        # taken from: https://github.com/run-llama/llama_index/blob/38cfe22bfd4a1763c7d998aa26002d84b4c7e1b3/llama-index-core/llama_index/core/utilities/sql_wrapper.py#L151
-        template = "Table '{table_name}' has columns: {columns}, "
-        try:
-            # try to retrieve table comment
-            table_comment = self._inspector.get_table_comment(
-                table_name, schema=self._schema
-            )["text"]
-            if table_comment:
-                template += f"with comment: ({table_comment}) "
-        except NotImplementedError:
-            # get_table_comment raises NotImplementedError for a dialect that does not support comments.
-            pass
-        
-        columns = []
-        for column in self._inspector.get_columns(table_name, schema=self._schema):
-            if column.get("comment"):
-                columns.append(
-                    f"{column['name']} ({column['type']!s}): "
-                    f"'{column.get('comment')}'"
-                )
-            else:
-                columns.append(f"{column['name']} ({column['type']!s})")
-        column_str = ", ".join(columns)
-        
-        return template.format(
-            table_name=table_name, columns=column_str
-        )
-
