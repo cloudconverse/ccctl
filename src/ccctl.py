@@ -20,8 +20,6 @@ def init_aws(integration: str,
     aws_steampipe = AWSSteampipe(aws_sso_profile, aws_regions)
     aws_steampipe.download_sqlite_extension()
     aws_steampipe.setup_sqlite()
-    aws_steampipe.load_sqlite_extension()
-    aws_steampipe.setup_tables()
 
 @app.command()
 def init(integration: str, 
@@ -54,12 +52,8 @@ def query(integration: str,
         ccctl_config = CcctlConfig(integration, llm_endpoint, model)
         ccctl_config.load_aws()
         aws_steampipe = AWSSteampipe(ccctl_config.aws_sso_profile, ccctl_config.aws_regions)
-        #aws_steampipe.setup_sqlite()
-        #aws_steampipe.load_sqlite_extension()
-        #aws_steampipe.setup_tables()
         sql = aws_steampipe.generate_query(ccctl_config.llm_endpoint, ccctl_config.model, string_query)
-        #import ipdb;ipdb.set_trace()
-        print(sql.response)        
+        print(sql.metadata["result"][0][0])     
 
 
 if __name__ == "__main__":

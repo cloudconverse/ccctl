@@ -22,11 +22,6 @@ class AWSSteampipe:
         self.aws_regions = aws_regions
         self.db_connection_string = f"{self.home}/.ccctl/aws_steampipe.db"
 
-    def setup_sqlite(self):
-        self.db_connection = sqlite3.connect(self.db_connection_string)
-        self.db_connection.enable_load_extension(True)
-        self.cursor = self.db_connection.cursor()
-
     def download_sqlite_extension(self):
         # don't download if already downloaded
         if os.path.isfile(f"{self.home}/.ccctl/steampipe_sqlite_aws.so"):
@@ -41,20 +36,6 @@ class AWSSteampipe:
             extension_tar.close()
             if platform.system().lower() == "darwin":
                 os.rename(f"{self.home}/.ccctl/steampipe_sqlite_aws.so", f"{self.home}/.ccctl/steampipe_sqlite_aws.dylib")
-
-    def load_sqlite_extension(self):
-        self.cursor.execute(f"select load_extension('{self.home}/.ccctl/steampipe_sqlite_aws')")
-
-    def setup_tables(self):
-        if not self.aws_sso_profile:
-            err_console.print("Please set --aws_sso_profile and/or --aws_regions")
-            sys.exit(1)
-        aws_steampipe_config = json.dumps({"profile": self.aws_sso_profile, "regions": self.aws_regions})
-        self.cursor.execute("select steampipe_configure_aws('{}');".format(aws_steampipe_config))
-
-
-    def index_tables(self):
-        pass
 
     def generate_query(self, llm_endpoint, model, query):
         self.genai_engine = SQLGenAIEngine(llm_endpoint, model, self.db_connection_string)

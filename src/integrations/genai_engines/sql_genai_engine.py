@@ -32,14 +32,13 @@ class SQLGenAIEngine:
         We remove some ec2 tables that can confuse LLMs on asking for ec2s
         """
         raw_query = self.db.run_sql("SELECT name FROM pragma_module_list()")
-        #import ipdb;ipdb.set_trace()
         table_names = [t[0] for t in raw_query[1]["result"] if t[0].startswith("aws") and t[0] not in exclude]
         table_schema_objs = [(SQLTableSchema(table_name=t)) for t in table_names]
         table_node_mapping = SQLTableNodeMapping(self.db)
         Settings.embed_model = HuggingFaceEmbedding(
             model_name="BAAI/bge-small-en-v1.5"
         )
-        #import ipdb;ipdb.set_trace()
+        
         obj_index = ObjectIndex.from_objects(
             table_schema_objs,
             table_node_mapping,
