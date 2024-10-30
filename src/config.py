@@ -15,7 +15,18 @@ class CcctlConfig:
 
     def load_aws(self):
         with open(f"{self.home}/.ccctl/config.yaml",'r') as f:
-            return yaml.safe_load(f)
+            yaml_config = yaml.safe_load(f)
+            if not self.llm_endpoint:
+                self.llm_endpoint = yaml_config[self.integration].get("llm_endpoint")
+
+            if not self.model:
+                self.model = yaml_config[self.integration].get("model")
+
+            if not self.aws_sso_profile:
+                self.aws_sso_profile = yaml_config[self.integration].get("aws_sso_profile")
+
+            if not self.aws_regions:
+                self.aws_regions = yaml_config[self.integration].get("aws_regions")
 
     def setup_aws(self):
         if not os.path.isdir(f"{self.home}/.ccctl"):
