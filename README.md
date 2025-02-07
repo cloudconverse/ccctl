@@ -17,7 +17,7 @@ $ ollama pull sqlcoder
 ```bash
 $ # aws configure / aws sso configure
 $ ccctl init aws
-$ ccctl aws "How many instances do I have running in eu-central-1?" --llm-endpoint http://localhost:11434 --model sqlcoder
+$ ccctl aws "How many ec2 instances do I have running in eu-central-1?" --llm-endpoint http://localhost:11434 --model sqlcoder
 10
 
 # put settings inside ~/.ccctl/config.yaml
